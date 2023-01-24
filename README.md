@@ -1,3 +1,3 @@
 # EasyBLE
 
-A description of this package.
+Swift BLE Library using CoreBluetooth and Combine for handling of asynchronous Bluetooth events. 
