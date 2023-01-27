@@ -2,13 +2,20 @@ import Combine
 import CoreBluetooth
 
 @available(iOS 13.0, *)
-public struct EasyBLE {
+protocol EasyBLEProtocol {
+    func startDiscovering()
+    func connectPeripheral(_ peripheral: Peripheral)
+    func disconnectFromPeripheral(_ peripheral: Peripheral)
+}
+
+@available(iOS 13.0, *)
+public struct EasyBLE: EasyBLEProtocol {
     
     private var serviceUUIDs: [CBUUID]
     
     public private(set) var statePublisher: PassthroughSubject<CBManagerState, Never>?
     public private(set) var peripheralPublisher: PassthroughSubject<Set<Peripheral>, Never>?
-    public private(set) var discoveredPublisher: PassthroughSubject<UUID, Never>?
+    public private(set) var discoveredPublisher: PassthroughSubject<Peripheral, Never>?
 
     public init(serviceUUIDs: [CBUUID]) {
         self.serviceUUIDs = serviceUUIDs
@@ -24,5 +31,17 @@ public struct EasyBLE {
         if let peripheralsShared = Peripherals.shared {
             self.peripheralPublisher = peripheralsShared.peripheralsPublisher
         }
+    }
+    
+    public func startDiscovering() {
+        BluetoothService.shared?.discoverPeripherals()
+    }
+    
+    public func connectPeripheral(_ peripheral: Peripheral) {
+        BluetoothService.shared?.connectToPeripheral(peripheral)
+    }
+    
+    public func disconnectFromPeripheral(_ peripheral: Peripheral) {
+        //
     }
 }

@@ -13,6 +13,7 @@ import Combine
 final class BluetoothService: NSObject, CBCentralManagerDelegate {
     
     private var serviceUUIDs: [CBUUID]
+    private var manager: CBCentralManager!
     
     static var shared: BluetoothService?
     
@@ -20,11 +21,13 @@ final class BluetoothService: NSObject, CBCentralManagerDelegate {
      Publisher for the state of the CBCentralManager.
      */
     public private(set) var statePublisher = PassthroughSubject<CBManagerState, Never>()
-    public private(set) var discoveredPublisher = PassthroughSubject<UUID, Never>()
+    public private(set) var discoveredPublisher = PassthroughSubject<Peripheral, Never>()
     
     init(serviceUUIDs: [CBUUID]) {
         self.serviceUUIDs = serviceUUIDs
         super.init()
+        
+        self.manager = CBCentralManager(delegate: self, queue: nil)
     }
     
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
@@ -48,6 +51,16 @@ final class BluetoothService: NSObject, CBCentralManagerDelegate {
             break
         }
     }
+    
+    func discoverPeripherals() {
+        if (self.manager.state == .poweredOn) {
+            self.manager.scanForPeripherals(withServices: serviceUUIDs.isEmpty ? nil : serviceUUIDs)
+        }
+    }
+    
+    func connectToPeripheral(_ peripheral: Peripheral) {
+        self.manager.connect(peripheral.peripheral)
+    }
 }
 
 @available(iOS 13.0, *)
@@ -69,7 +82,7 @@ extension BluetoothService: CBPeripheralDelegate {
 @available(iOS 13, *)
 extension BluetoothService {
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        self.discoveredPublisher.send(peripheral.identifier)
+        self.discoveredPublisher.send(Peripheral(peripheral: peripheral))
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
