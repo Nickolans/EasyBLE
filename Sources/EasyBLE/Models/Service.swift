@@ -8,7 +8,12 @@
 import Foundation
 import CoreBluetooth
 
-struct Service {
-    var uuid: UUID
+public struct Service {
+    private var uuid: CBUUID
     var service: CBService
+    
+    init(_ service: CBService) {
+        self.uuid = service.uuid
+        self.service = service
+    }
 }

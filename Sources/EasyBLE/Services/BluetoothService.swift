@@ -21,7 +21,8 @@ final class BluetoothService: NSObject, CBCentralManagerDelegate {
      Publisher for the state of the CBCentralManager.
      */
     public private(set) var statePublisher = PassthroughSubject<CBManagerState, Never>()
-    public private(set) var discoveredPublisher = PassthroughSubject<Peripheral, Never>()
+    public private(set) var discoveredPublisher = PassthroughSubject<LoadType, Never>()
+    public private(set) var valuePublisher = PassthroughSubject<ValueLoad, Never>()
     
     init(serviceUUIDs: [CBUUID]) {
         self.serviceUUIDs = serviceUUIDs
@@ -61,6 +62,18 @@ final class BluetoothService: NSObject, CBCentralManagerDelegate {
     func connectToPeripheral(_ peripheral: Peripheral) {
         self.manager.connect(peripheral.peripheral)
     }
+    
+    func discoverServices(forPeripheral peripheral: Peripheral, serviceUUIDs: [CBUUID]?) {
+        peripheral.peripheral.discoverServices(serviceUUIDs)
+    }
+    
+    func discoverCharacteristics(forPeripheral peripheral: Peripheral, forService service: Service, withCharacteristicUUIDs uuids: [CBUUID]?) {
+        peripheral.peripheral.discoverCharacteristics(uuids, for: service.service)
+    }
+    
+    func discoverDescriptors(forPeripheral peripheral: Peripheral, forCharacteristic characteristic: Characteristic) {
+        peripheral.peripheral.discoverDescriptors(for: characteristic.characteristic)
+    }
 }
 
 @available(iOS 13.0, *)
@@ -82,19 +95,22 @@ extension BluetoothService: CBPeripheralDelegate {
 @available(iOS 13, *)
 extension BluetoothService {
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        self.discoveredPublisher.send(Peripheral(peripheral: peripheral))
+        self.discoveredPublisher.send(.peripheral(Peripheral(peripheral: peripheral)))
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
-        //
+        guard let services = peripheral.services else { return }
+        self.discoveredPublisher.send(.services(services.map({ Service($0) })))
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
-        //
+        guard let characteristics = service.characteristics else { return }
+        self.discoveredPublisher.send(.characteristics(characteristics.map({ Characteristic($0) })))
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverDescriptorsFor characteristic: CBCharacteristic, error: Error?) {
-        //
+        guard let descriptors = characteristic.descriptors else { return }
+        self.discoveredPublisher.send(.descriptors(descriptors.map({ Descriptor($0) })))
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverIncludedServicesFor service: CBService, error: Error?) {
@@ -116,10 +132,12 @@ extension BluetoothService {
 @available(iOS 13, *)
 extension BluetoothService {
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
-        //
+        guard let value = characteristic.value else { return }
+        self.valuePublisher.send(.characteristic(Characteristic(value: value, characteristic)))
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor descriptor: CBDescriptor, error: Error?) {
-        //
+        guard let value = descriptor.value else { return }
+        self.valuePublisher.send(.descriptor(Descriptor(value: value, descriptor)) )
     }
 }

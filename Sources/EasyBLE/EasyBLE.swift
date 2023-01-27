@@ -15,7 +15,10 @@ public struct EasyBLE: EasyBLEProtocol {
     
     public private(set) var statePublisher: PassthroughSubject<CBManagerState, Never>?
     public private(set) var peripheralPublisher: PassthroughSubject<Set<Peripheral>, Never>?
-    public private(set) var discoveredPublisher: PassthroughSubject<Peripheral, Never>?
+    
+    // Discovered
+    public private(set) var discoveredPublisher: PassthroughSubject<LoadType, Never>?
+    public private(set) var valuePublisher: PassthroughSubject<ValueLoad, Never>?
 
     public init(serviceUUIDs: [CBUUID]) {
         self.serviceUUIDs = serviceUUIDs
@@ -26,6 +29,7 @@ public struct EasyBLE: EasyBLEProtocol {
         if let bluetoothShared = BluetoothService.shared {
             self.statePublisher = bluetoothShared.statePublisher
             self.discoveredPublisher = bluetoothShared.discoveredPublisher
+            self.valuePublisher = bluetoothShared.valuePublisher
         }
         
         if let peripheralsShared = Peripherals.shared {

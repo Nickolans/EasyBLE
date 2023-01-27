@@ -8,8 +8,14 @@
 import Foundation
 import CoreBluetooth
 
-struct Characteristic {
-    var uuid: UUID
-    var value: Data
+public struct Characteristic {
+    var uuid: CBUUID
+    public var value: Data? = nil
     var characteristic: CBCharacteristic
+    
+    init(value: Data? = nil, _ characteristic: CBCharacteristic) {
+        self.uuid = characteristic.uuid
+        self.value = value
+        self.characteristic = characteristic
+    }
 }
