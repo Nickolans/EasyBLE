@@ -63,16 +63,28 @@ final class BluetoothService: NSObject, CBCentralManagerDelegate {
         self.manager.connect(peripheral.peripheral)
     }
     
+    func disconnectFromPeripheral(_ peripheral: Peripheral) {
+        self.manager.cancelPeripheralConnection(peripheral.peripheral)
+    }
+    
     func discoverServices(forPeripheral peripheral: Peripheral, serviceUUIDs: [CBUUID]?) {
         peripheral.peripheral.discoverServices(serviceUUIDs)
     }
     
-    func discoverCharacteristics(forPeripheral peripheral: Peripheral, forService service: Service, withCharacteristicUUIDs uuids: [CBUUID]?) {
-        peripheral.peripheral.discoverCharacteristics(uuids, for: service.service)
+    func discoverCharacteristics(forService service: Service, withCharacteristicUUIDs uuids: [CBUUID]?) {
+        service.peripheral.peripheral.discoverCharacteristics(uuids, for: service.service)
     }
     
     func discoverDescriptors(forPeripheral peripheral: Peripheral, forCharacteristic characteristic: Characteristic) {
         peripheral.peripheral.discoverDescriptors(for: characteristic.characteristic)
+    }
+    
+    func write(value data: Data, toCharacteristic characteristic: Characteristic, type: CBCharacteristicWriteType) {
+        characteristic.service.peripheral.peripheral.writeValue(data, for: characteristic.characteristic, type: type)
+    }
+    
+    func write(value data: Data, toDescriptor descriptor: Descriptor) {
+        descriptor.characteristic.service.peripheral.peripheral.writeValue(data, for: descriptor.descriptor)
     }
 }
 
@@ -100,17 +112,21 @@ extension BluetoothService {
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard let services = peripheral.services else { return }
-        self.discoveredPublisher.send(.services(services.map({ Service($0) })))
+        
+        if let peripheral = Peripherals.shared?.find(withUUID: peripheral.identifier) {
+            self.discoveredPublisher.send(.services(services.map({ Service($0, peripheral: peripheral) })))
+        }
+        
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         guard let characteristics = service.characteristics else { return }
-        self.discoveredPublisher.send(.characteristics(characteristics.map({ Characteristic($0) })))
+        self.discoveredPublisher.send(.characteristics(characteristics.map({ Characteristic($0, service: Service(service, peripheral: Peripheral(peripheral: peripheral))) })))
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverDescriptorsFor characteristic: CBCharacteristic, error: Error?) {
         guard let descriptors = characteristic.descriptors else { return }
-        self.discoveredPublisher.send(.descriptors(descriptors.map({ Descriptor($0) })))
+        self.discoveredPublisher.send(.descriptors(descriptors.map({ Descriptor($0, characteristic: Characteristic(characteristic, service: Service(characteristic.service!, peripheral: Peripheral(peripheral: peripheral)))) })))
     }
     
     func peripheral(_ peripheral: CBPeripheral, didDiscoverIncludedServicesFor service: CBService, error: Error?) {
@@ -133,11 +149,11 @@ extension BluetoothService {
 extension BluetoothService {
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         guard let value = characteristic.value else { return }
-        self.valuePublisher.send(.characteristic(Characteristic(value: value, characteristic)))
+        self.valuePublisher.send(.characteristic(Characteristic(value: value, characteristic, service: Service(characteristic.service!, peripheral: Peripheral(peripheral: peripheral)))))
     }
     
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor descriptor: CBDescriptor, error: Error?) {
         guard let value = descriptor.value else { return }
-        self.valuePublisher.send(.descriptor(Descriptor(value: value, descriptor)) )
+        self.valuePublisher.send(.descriptor(Descriptor(value: value, descriptor, characteristic: Characteristic(descriptor.characteristic!, service: Service(descriptor.characteristic!.service!, peripheral: Peripheral(peripheral: peripheral))))) )
     }
 }

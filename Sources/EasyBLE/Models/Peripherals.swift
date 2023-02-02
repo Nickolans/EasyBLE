@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import CoreBluetooth
 
 @available(iOS 13.0, *)
 struct Peripherals {
@@ -43,5 +44,9 @@ struct Peripherals {
     
     private func push() {
         self.peripheralsPublisher.send(self.items)
+    }
+    
+    func find(withUUID uuid: UUID) -> Peripheral? {
+        return self.items.filter({ $0.id == uuid }).first
     }
 }

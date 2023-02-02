@@ -2,6 +2,15 @@
 
 Swift BLE Library using CoreBluetooth and Combine for handling of asynchronous Bluetooth events.
 
+- [Subscribers](#Subscribers)
+  - [BLE State](#ble-state)
+  - [Discovery](#discovery)
+  - [Peripheral Updates](#peripheral-updates)
+  - [Writes](#writes)
+- [Write](#Write)
+  - [Write to Characteristic](#write-to-characteristic)
+  - [Write to Descriptor](#write-to-descriptor)
+
 ## Subscribers
 
 ### BLE State
@@ -61,4 +70,18 @@ self.valuesSubscriber = ble.valuePublisher?.sink(receiveValue: { load in
         print("Characteristic Data: \(String(describing: characteristic.value))")
     }
 })
+```
+
+## Write
+
+### Write to Characteristic
+
+```swift
+ble.write(value: data, toCharacteristic: characteristic, type: .withResponse)
+```
+
+### Write to Descriptor
+
+```swift
+ble.write(value: data, toDescriptor: descriptor)
 ```

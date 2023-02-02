@@ -6,6 +6,9 @@ protocol EasyBLEProtocol {
     func startDiscovering()
     func connectPeripheral(_ peripheral: Peripheral)
     func disconnectFromPeripheral(_ peripheral: Peripheral)
+    func discoverServices(forPeripheral peripheral: Peripheral, serviceUUIDs: [CBUUID]?)
+    func discoverCharacteristics(forService service: Service, characteristicUUIDs: [CBUUID]?)
+    func discoverDescriptors(forCharacteristic characteristic: Characteristic)
 }
 
 @available(iOS 13.0, *)
@@ -46,6 +49,26 @@ public struct EasyBLE: EasyBLEProtocol {
     }
     
     public func disconnectFromPeripheral(_ peripheral: Peripheral) {
-        //
+        BluetoothService.shared?.disconnectFromPeripheral(peripheral)
+    }
+    
+    public func discoverServices(forPeripheral peripheral: Peripheral, serviceUUIDs: [CBUUID]?) {
+        BluetoothService.shared?.discoverServices(forPeripheral: peripheral, serviceUUIDs: serviceUUIDs)
+    }
+    
+    public func discoverCharacteristics(forService service: Service, characteristicUUIDs: [CBUUID]?) {
+        BluetoothService.shared?.discoverCharacteristics(forService: service, withCharacteristicUUIDs: characteristicUUIDs)
+    }
+    
+    public func discoverDescriptors(forCharacteristic characteristic: Characteristic) {
+        BluetoothService.shared?.discoverDescriptors(forPeripheral: characteristic.service.peripheral, forCharacteristic: characteristic)
+    }
+    
+    public func write(value data: Data, toCharacteristic characteristic: Characteristic, type: CBCharacteristicWriteType) {
+        BluetoothService.shared?.write(value: data, toCharacteristic: characteristic, type: type)
+    }
+    
+    public func write(value data: Data, toDescriptor descriptor: Descriptor) {
+        BluetoothService.shared?.write(value: data, toDescriptor: descriptor)
     }
 }
