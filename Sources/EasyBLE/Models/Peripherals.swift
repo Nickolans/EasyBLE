@@ -15,29 +15,29 @@ struct Peripherals {
     /**
      Single instance of Peripherals.
      */
-    static var shared: Peripherals?
+    static var shared: Peripherals = Peripherals()
     
     /**
      Peripherals we are or have been connected to.
      */
-    private(set) var items: Set<Peripheral> = []
+    private(set) var items: Set<EBPeripheral> = []
     
     /**
      Publisher for updated peripherals.
      */
-    private(set) var peripheralsPublisher = PassthroughSubject<Set<Peripheral>, Never>()
+    private(set) var peripheralsPublisher = PassthroughSubject<Set<EBPeripheral>, Never>()
     
-    mutating func updatePeripheral(_ peripheral: Peripheral) {
+    mutating func updatePeripheral(_ peripheral: EBPeripheral) {
         self.items.update(with: peripheral)
         self.push()
     }
     
-    mutating func removePeripheral(_ peripheral: Peripheral) {
+    mutating func removePeripheral(_ peripheral: EBPeripheral) {
         self.items.remove(peripheral)
         self.push()
     }
     
-    mutating func addPeripheral(_ peripheral: Peripheral) {
+    mutating func addPeripheral(_ peripheral: EBPeripheral) {
         self.items.insert(peripheral)
         self.push()
     }
@@ -46,7 +46,7 @@ struct Peripherals {
         self.peripheralsPublisher.send(self.items)
     }
     
-    func find(withUUID uuid: UUID) -> Peripheral? {
+    func find(withUUID uuid: UUID) -> EBPeripheral? {
         return self.items.filter({ $0.id == uuid }).first
     }
 }
