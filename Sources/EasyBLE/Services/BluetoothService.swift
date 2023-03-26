@@ -23,6 +23,7 @@ final class BluetoothService: NSObject, CBCentralManagerDelegate {
     public private(set) var statePublisher = PassthroughSubject<CBManagerState, Never>()
     public private(set) var discoveredPublisher = PassthroughSubject<LoadType, Never>()
     public private(set) var valuePublisher = PassthroughSubject<ValueLoad, Never>()
+    public private(set) var peripheralsPublisher = PassthroughSubject<EBPeripheral, BluetoothServiceError>()
     
     override init() {
         super.init()
@@ -55,10 +56,12 @@ final class BluetoothService: NSObject, CBCentralManagerDelegate {
         }
     }
     
-    func discoverPeripherals() {
-        if (self.manager.state == .poweredOn) {
-            self.manager.scanForPeripherals(withServices: serviceUUIDs.isEmpty ? nil : serviceUUIDs)
+    func discoverPeripherals() throws {
+        if (self.manager.state != .poweredOn) {
+            throw BluetoothServiceError.stateNotPoweredOn
         }
+        
+        self.manager.scanForPeripherals(withServices: serviceUUIDs.isEmpty ? nil : serviceUUIDs)
     }
     
     func connectToPeripheral(_ peripheral: EBPeripheral) {
@@ -89,21 +92,26 @@ final class BluetoothService: NSObject, CBCentralManagerDelegate {
     func write(value data: Data, toDescriptor descriptor: EBDescriptor) {
         descriptor.object.characteristic?.service?.peripheral?.writeValue(data, for: descriptor.object)
     }
+    
+    func notify(_ value: Bool, forCharacteristic characteristic: EBCharacteristic) {
+        characteristic.object.service?.peripheral?.setNotifyValue(value, for: characteristic.object)
+    }
 }
 
 @available(iOS 13.0, *)
 extension BluetoothService: CBPeripheralDelegate {
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        Peripherals.shared.addPeripheral(EBPeripheral(peripheral, connected: true))
+        self.peripheralsPublisher.send(EBPeripheral(peripheral, connected: true))
     }
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         // TODO: Display Error
-        Peripherals.shared.addPeripheral(EBPeripheral(peripheral, connected: true))
+        guard let error = error else { return }
+        self.peripheralsPublisher.send(completion: .failure(.connectionError(EBPeripheral(peripheral, connected: false), error.localizedDescription)))
     }
     
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        Peripherals.shared.updatePeripheral(EBPeripheral(peripheral, connected: true))
+        self.peripheralsPublisher.send(EBPeripheral(peripheral, connected: false))
     }
 }
 

@@ -12,7 +12,7 @@ import CoreBluetooth
 public struct EBDescriptor: BluetoothObject {
         
     typealias T = CBDescriptor
-    typealias V = Any
+    public typealias V = Any
     public private(set) var id: UUID
     private(set) var object: T
     

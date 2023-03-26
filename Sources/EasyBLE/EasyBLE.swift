@@ -3,7 +3,7 @@ import CoreBluetooth
 
 @available(iOS 13.0, *)
 protocol EasyBLEProtocol {
-    func startDiscovering()
+    func startDiscovering() throws
     func connectPeripheral(_ peripheral: EBPeripheral)
     func disconnectFromPeripheral(_ peripheral: EBPeripheral)
     func discoverServices(forPeripheral peripheral: EBPeripheral, serviceUUIDs: [CBUUID]?)
@@ -16,23 +16,17 @@ public struct EasyBLE: EasyBLEProtocol {
     
     private var serviceUUIDs: [CBUUID]
     
-    public private(set) var statePublisher: PassthroughSubject<CBManagerState, Never>?
-    public private(set) var peripheralPublisher: PassthroughSubject<Set<EBPeripheral>, Never>?
-    
-    // Discovered
-    public private(set) var discoveredPublisher: PassthroughSubject<LoadType, Never>?
-    public private(set) var valuePublisher: PassthroughSubject<ValueLoad, Never>?
+    public private(set) var discoveredPublisher = BluetoothService.shared.discoveredPublisher
+    public private(set) var statePublisher = BluetoothService.shared.statePublisher
+    public private(set) var valuePublisher = BluetoothService.shared.valuePublisher
+    public private(set) var peripheralPublisher = BluetoothService.shared.peripheralsPublisher
 
     public init(serviceUUIDs: [CBUUID]) {
         self.serviceUUIDs = serviceUUIDs
-        self.statePublisher = BluetoothService.shared.statePublisher
-        self.discoveredPublisher = BluetoothService.shared.discoveredPublisher
-        self.valuePublisher = BluetoothService.shared.valuePublisher
-        self.peripheralPublisher = Peripherals.shared.peripheralsPublisher
     }
     
-    public func startDiscovering() {
-        BluetoothService.shared.discoverPeripherals()
+    public func startDiscovering() throws {
+        try BluetoothService.shared.discoverPeripherals()
     }
     
     public func connectPeripheral(_ peripheral: EBPeripheral) {
@@ -57,6 +51,10 @@ public struct EasyBLE: EasyBLEProtocol {
     
     public func write(value data: Data, toCharacteristic characteristic: EBCharacteristic, type: CBCharacteristicWriteType) {
         BluetoothService.shared.write(value: data, toCharacteristic: characteristic, type: type)
+    }
+    
+    public func notify(_ value: Bool, forCharacteristic characteristic: EBCharacteristic) {
+        BluetoothService.shared.notify(value, forCharacteristic: characteristic)
     }
     
     public func write(value data: Data, toDescriptor descriptor: EBDescriptor) {

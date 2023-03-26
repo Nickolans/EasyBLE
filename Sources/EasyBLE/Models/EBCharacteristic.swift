@@ -12,7 +12,7 @@ import CoreBluetooth
 public struct EBCharacteristic: BluetoothObject {
         
     typealias T = CBCharacteristic
-    typealias V = Data
+    public typealias V = Data
     public private(set) var id: UUID
     private(set) var object: T
     
