@@ -9,8 +9,8 @@ import Foundation
 
 @available(iOS 13.0, *)
 public enum LoadType {
-    case peripheral(Peripheral)
-    case services([Service])
-    case characteristics([Characteristic])
-    case descriptors([Descriptor])
+    case peripheral(EBPeripheral)
+    case services([EBService])
+    case characteristics([EBCharacteristic])
+    case descriptors([EBDescriptor])
 }
