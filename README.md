@@ -14,8 +14,6 @@ Swift BLE Library using CoreBluetooth and Combine for handling of asynchronous B
 
 ## EasyBle
 
----
-
 **Summary**
 
 Create an instance of EasyBLE.
@@ -39,8 +37,6 @@ do {
 ```
 
 ## Discover Peripherals
-
----
 
 **Summary**
 
@@ -71,8 +67,6 @@ self.discoveredSusbcriber = ble.discoveredPublisher.sink(receiveValue: { load in
 
 ## Discover Services
 
----
-
 **Summary**
 
 Discover services of peripheral. Discovered services will be published to the `discoveredPublisher`.
@@ -94,8 +88,6 @@ self.discoveredSusbcriber = ble.discoveredPublisher.sink(receiveValue: { load in
 ```
 
 ## Discover Characteristics
-
----
 
 **Summary**
 
@@ -123,8 +115,6 @@ self.discoveredSusbcriber = ble.discoveredPublisher.sink(receiveValue: { load in
 ```
 
 ## Discover Descriptors
-
----
 
 **Summary**
 
@@ -156,8 +146,6 @@ self.discoveredSusbcriber = ble.discoveredPublisher.sink(receiveValue: { load in
 
 ## Peripheral Updates
 
----
-
 **Summary**
 
 Subscriber to peripheral updates such as when a peripheral connects or disconnects.
@@ -186,8 +174,6 @@ self.peripheralsSubscriber = ble.peripheralPublisher.sink(receiveCompletion: { e
 
 ## Write to Characteristic
 
----
-
 **Summary**
 
 Write to characteristic. Writing to a characteristic, reading, or enabling notification for a characteristic will trigger the `valuesPublisher`.
@@ -208,8 +194,6 @@ self.valuesSubscriber = ble.valuePublisher.sink(receiveValue: { load in
 
 ## Write to Descriptor
 
----
-
 **Summary**
 
 Write to descriptor. Writing to a descriptor or reading will trigger the `valuesPublisher`.
@@ -228,8 +212,6 @@ self.valuesSubscriber = ble.valuePublisher.sink(receiveValue: { load in
 ```
 
 ## Notify
-
----
 
 **Summary**
 

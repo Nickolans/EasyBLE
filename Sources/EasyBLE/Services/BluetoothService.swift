@@ -105,7 +105,6 @@ extension BluetoothService: CBPeripheralDelegate {
     }
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
-        // TODO: Display Error
         guard let error = error else { return }
         self.peripheralsPublisher.send(completion: .failure(.connectionError(EBPeripheral(peripheral, connected: false), error.localizedDescription)))
     }
