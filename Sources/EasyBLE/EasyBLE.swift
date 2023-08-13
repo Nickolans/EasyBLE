@@ -49,15 +49,15 @@ public struct EasyBLE: EasyBLEProtocol {
         BluetoothService.shared.discoverDescriptors(forCharacteristic: characteristic)
     }
     
-    public func write(value data: Data, toCharacteristic characteristic: EBCharacteristic, type: CBCharacteristicWriteType) {
-        BluetoothService.shared.write(value: data, toCharacteristic: characteristic, type: type)
+    public func write(value data: Data, toCharacteristic characteristic: EBCharacteristic, type: CBCharacteristicWriteType) async throws {
+        return try await BluetoothService.shared.write(value: data, toCharacteristic: characteristic, type: type)
+    }
+    
+    public func write(value data: Data, toDescriptor descriptor: EBDescriptor) async throws {
+        return try await BluetoothService.shared.write(value: data, toDescriptor: descriptor)
     }
     
     public func notify(_ value: Bool, forCharacteristic characteristic: EBCharacteristic) {
         BluetoothService.shared.notify(value, forCharacteristic: characteristic)
-    }
-    
-    public func write(value data: Data, toDescriptor descriptor: EBDescriptor) {
-        BluetoothService.shared.write(value: data, toDescriptor: descriptor)
     }
 }
