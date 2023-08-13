@@ -200,7 +200,6 @@ extension BluetoothService {
 @available(iOS 13, *)
 extension BluetoothService {
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
-        
         let key = EBCompositeKey(part1: peripheral.identifier, part2: characteristic.uuid.toUUID())
         
         if let subject = self.transientSubjects[key] {
