@@ -94,7 +94,7 @@ final class BluetoothService: NSObject, CBCentralManagerDelegate {
     func write(value data: Data, toCharacteristic characteristic: EBCharacteristic, type: CBCharacteristicWriteType) async throws {
         guard let service = characteristic.object.service, let peripheral = service.peripheral else { return }
         
-        let key = EBCompositeKey(part1: peripheral.identifier, part2: UUID(uuidString: characteristic.object.uuid.uuidString)!)
+        let key = EBCompositeKey(part1: peripheral.identifier, part2: characteristic.object.uuid.toUUID())
         
         self.transientSubjects[key] = BluetoothSubject()
         
