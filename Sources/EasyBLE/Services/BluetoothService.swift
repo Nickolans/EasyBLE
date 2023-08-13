@@ -205,7 +205,7 @@ extension BluetoothService {
         if let subject = self.transientSubjects[key] {
             // If there is an error, send to subscriber
             if let error =  error {
-                subject.send(completion: .failure(.connectionError(EBPeripheral(peripheral, connected: true), error.localizedDescription)))
+                subject.send(completion: .failure(.unableToWrite(error.localizedDescription)))
                 return
             }
             
