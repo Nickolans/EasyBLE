@@ -9,8 +9,12 @@ import Foundation
 import CoreBluetooth
 import Combine
 
+
+
 @available(iOS 13.0, *)
 final class BluetoothService: NSObject, CBCentralManagerDelegate {
+    
+    typealias BluetoothSubject = PassthroughSubject<Void, BluetoothServiceError>
     
     private var serviceUUIDs: [CBUUID] = []
     private var manager: CBCentralManager!
@@ -24,6 +28,8 @@ final class BluetoothService: NSObject, CBCentralManagerDelegate {
     public private(set) var discoveredPublisher = PassthroughSubject<LoadType, Never>()
     public private(set) var valuePublisher = PassthroughSubject<ValueLoad, Never>()
     public private(set) var peripheralsPublisher = PassthroughSubject<EBPeripheral, BluetoothServiceError>()
+    
+    private var transientSubjects: [EBCompositeKey:BluetoothSubject] = [:]
     
     override init() {
         super.init()
@@ -85,12 +91,63 @@ final class BluetoothService: NSObject, CBCentralManagerDelegate {
         peripheral.discoverDescriptors(for: characteristic.object)
     }
     
-    func write(value data: Data, toCharacteristic characteristic: EBCharacteristic, type: CBCharacteristicWriteType) {
-        characteristic.object.service?.peripheral?.writeValue(data, for: characteristic.object, type: type)
+    func write(value data: Data, toCharacteristic characteristic: EBCharacteristic, type: CBCharacteristicWriteType) async throws {
+        guard let service = characteristic.object.service, let peripheral = service.peripheral else { return }
+        
+        let key = EBCompositeKey(part1: peripheral.identifier, part2: characteristic.object.uuid.toUUID())
+        
+        self.transientSubjects[key] = BluetoothSubject()
+        
+        try await withCheckedThrowingContinuation { continuation in
+            
+            var cancellables: [AnyCancellable] = []
+            
+            if let subject = self.transientSubjects[key] {
+                subject.sink { error in
+                    switch error {
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    case .finished:
+                        continuation.resume()
+                    }
+                } receiveValue: { _ in
+                    continuation.resume()
+                }
+                .store(in: &cancellables)
+            }
+            
+            peripheral.writeValue(data, for: characteristic.object, type: type)
+        }
     }
     
-    func write(value data: Data, toDescriptor descriptor: EBDescriptor) {
-        descriptor.object.characteristic?.service?.peripheral?.writeValue(data, for: descriptor.object)
+    func write(value data: Data, toDescriptor descriptor: EBDescriptor) async throws {
+        
+        guard let characteristic = descriptor.object.characteristic, let service = characteristic.service, let peripheral = service.peripheral else { return }
+        
+        let key = EBCompositeKey(part1: peripheral.identifier, part2: descriptor.id)
+        
+        self.transientSubjects[key] = BluetoothSubject()
+        
+        try await withCheckedThrowingContinuation { continuation in
+            
+            var cancellables: [AnyCancellable] = []
+            
+            if let subject = self.transientSubjects[key] {
+                subject.sink { error in
+                    switch error {
+                    case .failure(let error):
+                        continuation.resume(throwing: error)
+                    case .finished:
+                        continuation.resume()
+                    }
+                } receiveValue: { _ in
+                    continuation.resume()
+                }
+                .store(in: &cancellables)
+            }
+            
+            peripheral.writeValue(data, for: descriptor.object)
+        }
     }
     
     func notify(_ value: Bool, forCharacteristic characteristic: EBCharacteristic) {
@@ -143,11 +200,33 @@ extension BluetoothService {
 @available(iOS 13, *)
 extension BluetoothService {
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
-        //
+        let key = EBCompositeKey(part1: peripheral.identifier, part2: characteristic.uuid.toUUID())
+        
+        if let subject = self.transientSubjects[key] {
+            // If there is an error, send to subscriber
+            if let error =  error {
+                subject.send(completion: .failure(.unableToWrite(error.localizedDescription)))
+                return
+            }
+            
+            // If there is not an error, send success
+            subject.send(completion: .finished)
+        }
     }
     
     func peripheral(_ peripheral: CBPeripheral, didWriteValueFor descriptor: CBDescriptor, error: Error?) {
-        //
+        let key = EBCompositeKey(part1: peripheral.identifier, part2: descriptor.uuid.toUUID())
+        
+        if let subject = self.transientSubjects[key] {
+            // If there is an error, send to subscriber
+            if let error =  error {
+                subject.send(completion: .failure(.unableToWrite(error.localizedDescription)))
+                return
+            }
+            
+            // If there is not an error, send success
+            subject.send(completion: .finished)
+        }
     }
 }
 

@@ -11,4 +11,5 @@ import Foundation
 public enum BluetoothServiceError: Error {
     case stateNotPoweredOn
     case connectionError(EBPeripheral, String)
+    case unableToWrite(String)
 }
