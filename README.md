@@ -179,7 +179,11 @@ self.peripheralsSubscriber = ble.peripheralPublisher.sink(receiveCompletion: { e
 Write to characteristic. Writing to a characteristic, reading, or enabling notification for a characteristic will trigger the `valuesPublisher`.
 
 ```swift
-ble.write(value: data, toCharacteristic: characteristic, type: .withResponse)
+do {
+    try await ble.write(value: data, toCharacteristic: characteristic, type: .withResponse)
+} catch BluetoothServiceError.unableToWrite(let errorMessage) {
+    print("Unable to write: \(errorMessage)")
+}
 
 // Subscribe for value
 self.valuesSubscriber = ble.valuePublisher.sink(receiveValue: { load in
@@ -199,7 +203,11 @@ self.valuesSubscriber = ble.valuePublisher.sink(receiveValue: { load in
 Write to descriptor. Writing to a descriptor or reading will trigger the `valuesPublisher`.
 
 ```swift
-ble.write(value: data, toDescriptor: descriptor)
+do {
+    try await ble.write(value: data, toDescriptor: descriptor)
+} catch BluetoothServiceError.unableToWrite(let errorMessage) {
+    print("Unable to write: \(errorMessage)")
+}
 
 // Subscribe for value
 self.valuesSubscriber = ble.valuePublisher.sink(receiveValue: { load in
