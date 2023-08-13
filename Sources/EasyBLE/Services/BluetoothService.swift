@@ -15,7 +15,6 @@ import Combine
 final class BluetoothService: NSObject, CBCentralManagerDelegate {
     
     typealias BluetoothSubject = PassthroughSubject<Void, BluetoothServiceError>
-    private var cancellables = [AnyCancellable]()
     
     private var serviceUUIDs: [CBUUID] = []
     private var manager: CBCentralManager!
